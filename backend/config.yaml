@@ -1,0 +1,28 @@
+database:
+  host: "localhost"
+  port: 5432
+  user: "postgres"
+  password: "password"
+  dbname: "maker_arena"
+
+app:
+  host: "0.0.0.0"
+  port: 8080
+
+admin:
+  password: "your-admin-password-here"
+
+binance:
+  ws_url: "wss://stream.binance.com:9443/ws"
+
+symbols:
+  - "btcusdc"
+  - "ethusdc"
+
+snapshot:
+  interval: "1h"
+
+trading:
+  maker_fee_rate: "0.0004"  # Maker 手续费率
+  funding_rate: "0"         # 资金费率
+  funding_interval: "8h"   # 资金结算间隔
