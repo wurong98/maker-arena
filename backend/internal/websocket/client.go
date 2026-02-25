@@ -80,12 +80,12 @@ func (c *BinanceClient) Stop() {
 func (c *BinanceClient) connect() {
 	defer c.wg.Done()
 
-	// Build stream URL: wss://fstream.binance.com/ws/btcusdc@trade/ethusdc@trade/...
+	// Build stream URL: wss://fstream.binance.com/stream?streams=btcusdc@trade/ethusdc@trade/...
 	streams := make([]string, len(c.symbols))
 	for i, symbol := range c.symbols {
 		streams[i] = fmt.Sprintf("%s@trade", strings.ToLower(symbol))
 	}
-	streamURL := c.wsURL + "/" + strings.Join(streams, "/")
+	streamURL := c.wsURL + "/stream?streams=" + strings.Join(streams, "/")
 
 	for {
 		select {
