@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maker Arena - 模拟交易系统</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">
+                    <span class="logo-icon">M</span>
+                    <span class="logo-text">Maker Arena</span>
+                </div>
+            </div>
+            <div class="header-stats" id="headerStats">
+                <div class="stat-item">
+                    <span class="stat-label">策略数</span>
+                    <span class="stat-value" id="strategyCount">-</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">成交数</span>
+                    <span class="stat-value" id="tradeCount">-</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">挂单数</span>
+                    <span class="stat-value" id="orderCount">-</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <a href="strategy.html" class="btn btn-outline">策略管理</a>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- 左侧：策略排行榜 -->
+            <aside class="sidebar" id="strategyList">
+                <div class="sidebar-header">
+                    <h3>策略排行榜</h3>
+                </div>
+                <div class="strategy-list" id="strategyListContainer">
+                    <div class="loading">加载中...</div>
+                </div>
+            </aside>
+
+            <!-- 右侧：内容区域 -->
+            <section class="content">
+                <!-- Content Header -->
+                <div class="content-header" id="contentHeader">
+                    <div class="strategy-info">
+                        <h2 id="selectedStrategyName">请选择策略</h2>
+                        <div class="strategy-stats">
+                            <div class="strategy-stat">
+                                <span class="label">余额</span>
+                                <span class="value" id="strategyBalance">-</span>
+                            </div>
+                            <div class="strategy-stat">
+                                <span class="label">收益率</span>
+                                <span class="value" id="strategyReturn">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 导航 -->
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="positions">持仓</button>
+                    <button class="tab-btn" data-tab="fills">成交记录</button>
+                    <button class="tab-btn" data-tab="orders">订单</button>
+                    <button class="tab-btn" data-tab="snapshots">快照</button>
+                    <button class="tab-btn" data-tab="liquidations">强平记录</button>
+                </div>
+
+                <!-- Tab 内容 -->
+                <div class="tab-content">
+                    <!-- 持仓 Tab -->
+                    <div class="tab-panel active" id="tab-positions">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>交易对</th>
+                                        <th>方向</th>
+                                        <th>数量</th>
+                                        <th>开仓价</th>
+                                        <th>当前价</th>
+                                        <th>强平价</th>
+                                        <th>未实现盈亏</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="positionsTable">
+                                    <tr><td colspan="7" class="empty-state">请选择策略查看持仓</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 成交记录 Tab -->
+                    <div class="tab-panel" id="tab-fills">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>时间</th>
+                                        <th>交易对</th>
+                                        <th>方向</th>
+                                        <th>价格</th>
+                                        <th>数量</th>
+                                        <th>手续费</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="fillsTable">
+                                    <tr><td colspan="6" class="empty-state">请选择策略查看成交记录</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="pagination" id="fillsPagination"></div>
+                    </div>
+
+                    <!-- 订单 Tab -->
+                    <div class="tab-panel" id="tab-orders">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>时间</th>
+                                        <th>交易对</th>
+                                        <th>类型</th>
+                                        <th>方向</th>
+                                        <th>价格</th>
+                                        <th>数量</th>
+                                        <th>已成交</th>
+                                        <th>状态</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ordersTable">
+                                    <tr><td colspan="8" class="empty-state">请选择策略查看订单</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="pagination" id="ordersPagination"></div>
+                    </div>
+
+                    <!-- 快照 Tab -->
+                    <div class="tab-panel" id="tab-snapshots">
+                        <div class="charts-container">
+                            <div class="chart-wrapper">
+                                <h4>收益曲线</h4>
+                                <canvas id="returnChart"></canvas>
+                            </div>
+                            <div class="chart-wrapper">
+                                <h4>余额曲线</h4>
+                                <canvas id="balanceChart"></canvas>
+                            </div>
+                            <div class="chart-wrapper">
+                                <h4>持仓价值曲线</h4>
+                                <canvas id="positionValueChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 强平记录 Tab -->
+                    <div class="tab-panel" id="tab-liquidations">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>时间</th>
+                                        <th>交易对</th>
+                                        <th>方向</th>
+                                        <th>强平价格</th>
+                                        <th>数量</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="liquidationsTable">
+                                    <tr><td colspan="5" class="empty-state">请选择策略查看强平记录</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="pagination" id="liquidationsPagination"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer: 行情栏 -->
+        <footer class="footer" id="tickerFooter">
+            <div class="ticker-container" id="tickerContainer">
+                <div class="loading">加载行情中...</div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

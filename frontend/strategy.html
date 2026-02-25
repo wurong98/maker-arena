@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>策略管理 - Maker Arena</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">
+                    <span class="logo-icon">M</span>
+                    <span class="logo-text">Maker Arena</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <a href="index.html" class="btn btn-outline">返回交易界面</a>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content strategy-management">
+            <div class="strategy-management-container">
+                <!-- 策略列表 -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3>策略列表</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="strategy-list-full" id="strategyManagementList">
+                            <div class="loading">加载中...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 策略详情 -->
+                <div class="panel" id="strategyDetailPanel" style="display: none;">
+                    <div class="panel-header">
+                        <h3>策略详情</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="strategy-detail" id="strategyDetail">
+                            <div class="detail-row">
+                                <span class="detail-label">策略名称</span>
+                                <span class="detail-value" id="detailName">-</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">状态</span>
+                                <span class="detail-value" id="detailStatus">-</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">初始资金</span>
+                                <span class="detail-value" id="detailInitialBalance">-</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">当前余额</span>
+                                <span class="detail-value" id="detailBalance">-</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">收益率</span>
+                                <span class="detail-value" id="detailReturn">-</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">创建时间</span>
+                                <span class="detail-value" id="detailCreatedAt">-</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">总成交数</span>
+                                <span class="detail-value" id="detailTotalTrades">-</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">总强平次数</span>
+                                <span class="detail-value" id="detailTotalLiquidations">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-simple">
+                Maker Arena - 模拟交易系统
+            </div>
+        </footer>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/strategy.js"></script>
+</body>
+</html>
