@@ -34,10 +34,10 @@ const ApiClient = {
     /**
      * GET 请求
      */
-    async get(endpoint, params = {}) {
+    async get(endpoint, params = {}, customHeaders = {}) {
         const queryString = new URLSearchParams(params).toString();
         const url = queryString ? `${endpoint}?${queryString}` : endpoint;
-        return this.request(url, { method: 'GET' });
+        return this.request(url, { method: 'GET', headers: customHeaders });
     },
 
     /**
@@ -99,6 +99,15 @@ const ApiClient = {
      */
     async deleteStrategy(id, adminPassword) {
         return this.delete(`/strategies/${id}`, { 'X-Admin-Password': adminPassword });
+    },
+
+    /**
+     * 获取策略 API-Key
+     * @param {string} id - 策略 ID
+     * @param {string} adminPassword - 管理员密码
+     */
+    async getAPIKey(id, adminPassword) {
+        return this.get(`/strategies/${id}/api-key`, {}, { 'X-Admin-Password': adminPassword });
     },
 
     /**

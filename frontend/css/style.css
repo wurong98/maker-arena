@@ -671,6 +671,26 @@ a:hover {
     color: var(--color-danger);
 }
 
+.api-key-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.api-key-value {
+    font-family: monospace;
+    font-size: 12px;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.btn-sm {
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
 .detail-value.active {
     color: var(--color-success);
 }

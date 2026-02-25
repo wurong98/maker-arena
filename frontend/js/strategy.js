@@ -63,6 +63,11 @@ const StrategyApp = {
             e.preventDefault();
             this.createStrategy();
         });
+
+        // 获取 API-Key 按钮
+        document.getElementById('getAPIKeyBtn').addEventListener('click', () => {
+            this.showAPIKeyModal();
+        });
     },
 
     /**
@@ -228,6 +233,55 @@ const StrategyApp = {
         // 总强平次数
         document.getElementById('detailTotalLiquidations').textContent =
             strategy.totalLiquidations || strategy.total_liquidations || 0;
+
+        // API-Key 重置为待获取状态
+        document.getElementById('detailAPIKey').textContent = '点击获取';
+    },
+
+    /**
+     * 显示获取 API-Key 模态框
+     */
+    showAPIKeyModal() {
+        if (!this.selectedStrategy) {
+            alert('请先选择一个策略');
+            return;
+        }
+
+        const adminPassword = prompt('请输入管理员密码获取 API-Key:');
+        if (!adminPassword) return;
+
+        this.fetchAPIKey(adminPassword);
+    },
+
+    /**
+     * 获取 API-Key
+     */
+    async fetchAPIKey(adminPassword) {
+        try {
+            const response = await ApiClient.getAPIKey(this.selectedStrategy.id, adminPassword);
+            const apiKey = response.api_key;
+
+            // 显示 API-Key
+            const apiKeyEl = document.getElementById('detailAPIKey');
+            apiKeyEl.textContent = apiKey;
+            apiKeyEl.title = '点击复制';
+
+            // 点击复制功能
+            apiKeyEl.onclick = () => {
+                navigator.clipboard.writeText(apiKey).then(() => {
+                    alert('API-Key 已复制到剪贴板');
+                }).catch(() => {
+                    alert('复制失败，请手动复制');
+                });
+            };
+
+            apiKeyEl.style.cursor = 'pointer';
+            apiKeyEl.style.color = '#4CAF50';
+
+        } catch (error) {
+            console.error('Failed to get API key:', error);
+            alert('获取失败: ' + (error.message || '请检查管理员密码'));
+        }
     }
 };
 

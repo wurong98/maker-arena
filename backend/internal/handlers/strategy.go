@@ -350,6 +350,32 @@ func (h *StrategyHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// GetAPIKey handles GET /strategies/:id/api-key
+func (h *StrategyHandler) GetAPIKey(w http.ResponseWriter, r *http.Request) {
+	// Verify admin password
+	password := r.Header.Get("X-Admin-Password")
+	if password != h.cfg.Admin.Password {
+		h.writeError(w, http.StatusUnauthorized, "UNAUTHORIZED", "Invalid admin password")
+		return
+	}
+
+	// Get strategy ID from URL
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	// Find strategy
+	var strategy models.Strategy
+	if err := h.db.First(&strategy, "id = ?", id).Error; err != nil {
+		h.writeError(w, http.StatusNotFound, "STRATEGY_NOT_FOUND", "Strategy not found")
+		return
+	}
+
+	// Return API key
+	h.writeJSON(w, http.StatusOK, map[string]string{
+		"api_key": strategy.APIKey,
+	})
+}
+
 // Helper function to write JSON response
 func (h *StrategyHandler) writeJSON(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")

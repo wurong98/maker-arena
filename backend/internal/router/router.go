@@ -49,6 +49,7 @@ func Setup(db *gorm.DB, cfg *config.Config, matchingEngine *engine.MatchingEngin
 	api.HandleFunc("/strategies/{id}", strategyHandler.Get).Methods("GET")
 	api.HandleFunc("/strategies/{id}", strategyHandler.Update).Methods("PUT")
 	api.HandleFunc("/strategies/{id}", strategyHandler.Delete).Methods("DELETE")
+	api.HandleFunc("/strategies/{id}/api-key", strategyHandler.GetAPIKey).Methods("GET")
 
 	// Exchange routes (authenticated)
 	api.HandleFunc("/exchange/createOrder", exchangeHandler.CreateOrder).Methods("POST")
