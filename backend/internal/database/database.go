@@ -1,11 +1,18 @@
 package database
 
 import (
+	"fmt"
+
+	"github.com/maker-arena/backend/internal/config"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-// Initialize initializes the database connection
-func Initialize(dsn string) (*gorm.DB, error) {
-	// TODO: Implement database initialization
-	return nil, nil
+func Connect(cfg config.DatabaseConfig) (*gorm.DB, error) {
+	dsn := cfg.DSN()
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to database: %w", err)
+	}
+	return db, nil
 }

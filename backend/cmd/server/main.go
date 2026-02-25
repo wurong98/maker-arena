@@ -22,9 +22,14 @@ func main() {
 	}
 
 	// Initialize database
-	db, err := database.Initialize(cfg.Database.DSN())
+	db, err := database.Connect(cfg.Database)
 	if err != nil {
-		log.Fatalf("Failed to initialize database: %v", err)
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+
+	// Run database migrations
+	if err := database.Migrate(db); err != nil {
+		log.Fatalf("Failed to run migrations: %v", err)
 	}
 
 	// Create router
