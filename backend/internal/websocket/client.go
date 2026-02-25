@@ -64,14 +64,16 @@ func (c *BinanceClient) Start() {
 
 // Stop disconnects from Binance WebSocket
 func (c *BinanceClient) Stop() {
-	// Close WebSocket connection first to unblock ReadMessage
+	// Close stopChan first to unblock all waiting goroutines
+	close(c.stopChan)
+
+	// Then close WebSocket connection to unblock ReadMessage
 	c.mu.Lock()
 	if c.conn != nil {
 		c.conn.Close()
 	}
 	c.mu.Unlock()
 
-	close(c.stopChan)
 	c.wg.Wait()
 	log.Println("Binance WebSocket client stopped")
 }
@@ -163,9 +165,20 @@ func (c *BinanceClient) handleMessages() {
 	}()
 
 	for {
+		select {
+		case <-c.stopChan:
+			return
+		default:
+		}
+
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
 			log.Printf("WebSocket read error: %v", err)
+			select {
+			case <-c.stopChan:
+				return
+			default:
+			}
 			close(pingStop)
 			return
 		}
