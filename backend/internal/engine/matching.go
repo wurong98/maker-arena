@@ -59,7 +59,7 @@ type MatchingEngine struct {
 	makerFeeRate    decimal.Decimal
 	positionManager *PositionManager
 	orderBooks      map[string]*OrderBook
-	tickers         map[string]*Ticker
+	marketData      *MarketData // Independent market data, no circular dependency
 	mu              sync.RWMutex
 	orderChan       chan string // channel for order processing
 	stopChan        chan struct{}
@@ -67,13 +67,13 @@ type MatchingEngine struct {
 }
 
 // NewMatchingEngine creates a new matching engine
-func NewMatchingEngine(db *gorm.DB, makerFeeRate decimal.Decimal, pm *PositionManager) *MatchingEngine {
+func NewMatchingEngine(db *gorm.DB, makerFeeRate decimal.Decimal, pm *PositionManager, md *MarketData) *MatchingEngine {
 	return &MatchingEngine{
 		db:              db,
 		makerFeeRate:    makerFeeRate,
 		positionManager: pm,
 		orderBooks:      make(map[string]*OrderBook),
-		tickers:         make(map[string]*Ticker),
+		marketData:      md,
 		orderChan:       make(chan string, 1000),
 		stopChan:        make(chan struct{}),
 	}
@@ -205,33 +205,17 @@ func (me *MatchingEngine) processOrders() {
 
 // HandleTrade processes a trade from Binance WebSocket
 func (me *MatchingEngine) HandleTrade(symbol string, price decimal.Decimal, quantity decimal.Decimal, tradeTime int64) {
+	// Get previous price BEFORE acquiring lock
+	previousPrice := decimal.Zero
+	if ticker := me.marketData.GetTicker(symbol); ticker != nil {
+		previousPrice = ticker.Price
+	}
+
 	me.mu.Lock()
 	defer me.mu.Unlock()
 
-	// Update ticker
-	ticker, ok := me.tickers[symbol]
-	if !ok {
-		ticker = &Ticker{
-			Symbol:    symbol,
-			Price:     price,
-			UpdatedAt: time.Now(),
-		}
-		me.tickers[symbol] = ticker
-	}
-
-	// Update price change
-	if ticker.PreviousPrice.IsZero() {
-		ticker.PriceChange24h = decimal.Zero
-		ticker.PriceChangePercent24h = decimal.Zero
-	} else {
-		ticker.PriceChange24h = price.Sub(ticker.PreviousPrice)
-		if ticker.PreviousPrice.GreaterThan(decimal.Zero) {
-			ticker.PriceChangePercent24h = ticker.PriceChange24h.Div(ticker.PreviousPrice).Mul(decimal.NewFromInt(100))
-		}
-	}
-	ticker.PreviousPrice = ticker.Price
-	ticker.Price = price
-	ticker.UpdatedAt = time.UnixMilli(tradeTime)
+	// Update ticker in MarketData (independent, no lock needed internally)
+	me.marketData.UpdateTicker(symbol, price, previousPrice)
 
 	// Get order book
 	ob, ok := me.orderBooks[symbol]
@@ -254,7 +238,7 @@ func (me *MatchingEngine) HandleTrade(symbol string, price decimal.Decimal, quan
 		}
 
 		// Check if price crossed order price (from below or equal to above)
-		if ticker.PreviousPrice.LessThanOrEqual(order.Price) && price.GreaterThan(order.Price) {
+		if previousPrice.LessThanOrEqual(order.Price) && price.GreaterThan(order.Price) {
 			// Calculate fill quantity
 			remaining := order.Quantity.Sub(order.FilledQty)
 			fillQty := quantity
@@ -276,7 +260,7 @@ func (me *MatchingEngine) HandleTrade(symbol string, price decimal.Decimal, quan
 		}
 
 		// Check if price crossed order price (from above or equal to below)
-		if ticker.PreviousPrice.GreaterThanOrEqual(order.Price) && price.LessThan(order.Price) {
+		if previousPrice.GreaterThanOrEqual(order.Price) && price.LessThan(order.Price) {
 			// Calculate fill quantity
 			remaining := order.Quantity.Sub(order.FilledQty)
 			fillQty := quantity
@@ -360,13 +344,8 @@ func (me *MatchingEngine) matchOrder(orderID string) {
 		return
 	}
 
-	me.mu.RLock()
-	var ticker *Ticker
-	if t, ok := me.tickers[order.Symbol]; ok {
-		ticker = t
-	}
-	me.mu.RUnlock()
-
+	// Get ticker from market data
+	ticker := me.marketData.GetTicker(order.Symbol)
 	if ticker == nil {
 		return
 	}
@@ -498,30 +477,14 @@ func (me *MatchingEngine) executeFill(order *Order, fillQty decimal.Decimal, pri
 	tx.Commit()
 }
 
-// GetTicker returns a copy of the ticker for a symbol (to avoid deadlock)
+// GetTicker returns a copy of the ticker for a symbol (delegates to MarketData)
 func (me *MatchingEngine) GetTicker(symbol string) *Ticker {
-	me.mu.RLock()
-	defer me.mu.RUnlock()
-
-	if ticker, ok := me.tickers[symbol]; ok {
-		// Return a copy to avoid deadlock
-		t := *ticker
-		return &t
-	}
-	return nil
+	return me.marketData.GetTicker(symbol)
 }
 
-// GetAllTickers returns all tickers (copies to avoid deadlock)
+// GetAllTickers returns all tickers (delegates to MarketData)
 func (me *MatchingEngine) GetAllTickers() map[string]*Ticker {
-	me.mu.RLock()
-	defer me.mu.RUnlock()
-
-	result := make(map[string]*Ticker)
-	for k, v := range me.tickers {
-		t := *v
-		result[k] = &t
-	}
-	return result
+	return me.marketData.GetAllTickers()
 }
 
 // GetOrder returns an order by ID

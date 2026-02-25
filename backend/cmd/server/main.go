@@ -42,20 +42,16 @@ func main() {
 		log.Fatalf("Invalid maker fee rate: %v", err)
 	}
 
-	// Create position manager
-	positionManager := engine.NewPositionManager(db, 100, func(symbol string) *engine.Ticker {
-		return nil // Will be set later
-	})
+	// Create shared market data (eliminates circular dependency)
+	marketData := engine.NewMarketData()
+
+	// Create position manager with shared market data
+	positionManager := engine.NewPositionManager(db, 100, marketData)
 	positionManager.Start()
 
-	// Create matching engine
-	matchingEngine := engine.NewMatchingEngine(db, makerFeeRate, positionManager)
+	// Create matching engine with shared market data
+	matchingEngine := engine.NewMatchingEngine(db, makerFeeRate, positionManager, marketData)
 	matchingEngine.Start()
-
-	// Set ticker getter for position manager
-	positionManager.SetTickerGetter(func(symbol string) *engine.Ticker {
-		return matchingEngine.GetTicker(symbol)
-	})
 
 	// Create snapshot scheduler
 	snapshotInterval, err := cfg.Snapshot.IntervalDuration()

@@ -26,19 +26,20 @@ type Position struct {
 
 // PositionManager manages positions
 type PositionManager struct {
-	db              *gorm.DB
-	leverage        int
-	positions       map[string]*Position // key: strategyID_symbol
-	mu              sync.RWMutex
-	tickerGetter    func(symbol string) *Ticker
+	db         *gorm.DB
+	leverage   int
+	positions  map[string]*Position // key: strategyID_symbol
+	mu         sync.RWMutex
+	marketData *MarketData // Independent market data, no circular dependency
 }
 
 // NewPositionManager creates a new position manager
-func NewPositionManager(db *gorm.DB, leverage int, tickerGetter func(symbol string) *Ticker) *PositionManager {
+func NewPositionManager(db *gorm.DB, leverage int, md *MarketData) *PositionManager {
 	return &PositionManager{
-		db:        db,
+		db:         db,
 		leverage:  leverage,
 		positions: make(map[string]*Position),
+		marketData: md,
 	}
 }
 
@@ -57,8 +58,8 @@ func (pm *PositionManager) Start() {
 	for _, p := range positions {
 		// Get current price
 		currentPrice := decimal.Zero
-		if tg := pm.tickerGetter; tg != nil {
-			ticker := tg(p.Symbol)
+		if pm.marketData != nil {
+			ticker := pm.marketData.GetTicker(p.Symbol)
 			if ticker != nil {
 				currentPrice = ticker.Price
 			}
@@ -131,8 +132,8 @@ func (pm *PositionManager) positionKey(strategyID, symbol string) string {
 func (pm *PositionManager) UpdatePosition(strategyID, symbol, side string, quantity decimal.Decimal, price decimal.Decimal, fee decimal.Decimal) {
 	// Get current ticker BEFORE acquiring lock to avoid deadlock
 	var currentPrice decimal.Decimal
-	if tg := pm.tickerGetter; tg != nil {
-		if ticker := tg(symbol); ticker != nil {
+	if pm.marketData != nil {
+		if ticker := pm.marketData.GetTicker(symbol); ticker != nil {
 			currentPrice = ticker.Price
 		}
 	}
@@ -350,8 +351,8 @@ func (pm *PositionManager) GetPositions(strategyID, symbol string) []Position {
 	var result []Position
 	for _, p := range positions {
 		// Update current price from ticker (outside of lock)
-		if tg := pm.tickerGetter; tg != nil {
-			ticker := tg(p.Symbol)
+		if pm.marketData != nil {
+			ticker := pm.marketData.GetTicker(p.Symbol)
 			if ticker != nil {
 				p.CurrentPrice = ticker.Price
 				p.UnrealizedPnl = pm.calculateUnrealizedPnl(p)
@@ -379,8 +380,8 @@ func (pm *PositionManager) CalculateUnrealizedPnl(strategyID string) decimal.Dec
 	// Update prices outside of lock to avoid deadlock
 	total := decimal.Zero
 	for _, p := range positions {
-		if tg := pm.tickerGetter; tg != nil {
-			ticker := tg(p.Symbol)
+		if pm.marketData != nil {
+			ticker := pm.marketData.GetTicker(p.Symbol)
 			if ticker != nil {
 				p.CurrentPrice = ticker.Price
 				p.UnrealizedPnl = pm.calculateUnrealizedPnl(p)
@@ -448,9 +449,4 @@ func (pm *PositionManager) savePosition(position *Position) {
 		existing.Leverage = position.Leverage
 		pm.db.Save(&existing)
 	}
-}
-
-// SetTickerGetter sets the function to get ticker data
-func (pm *PositionManager) SetTickerGetter(tickerGetter func(symbol string) *Ticker) {
-	pm.tickerGetter = tickerGetter
 }
