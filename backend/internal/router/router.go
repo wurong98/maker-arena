@@ -31,6 +31,9 @@ func Setup(db *gorm.DB, cfg *config.Config, matchingEngine *engine.MatchingEngin
 	r.HandleFunc("/strategy", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filepath.Join(frontendDir, "strategy.html"))
 	})
+	r.HandleFunc("/strategy.html", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, filepath.Join(frontendDir, "strategy.html"))
+	})
 	r.PathPrefix("/css/").Handler(http.StripPrefix("/css/", http.FileServer(http.Dir(filepath.Join(frontendDir, "css")))))
 	r.PathPrefix("/js/").Handler(http.StripPrefix("/js/", http.FileServer(http.Dir(filepath.Join(frontendDir, "js")))))
 
