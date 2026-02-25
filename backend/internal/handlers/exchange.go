@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -266,7 +267,12 @@ func (h *ExchangeHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 
 	// Freeze margin for limit orders (not for IOC/FOK/market which will be processed immediately)
 	if orderType == "limit" && timeInForce == "GTC" {
-		h.db.Model(&models.Strategy{}).Where("id = ?", strategy.ID).UpdateColumn("frozen_margin", gorm.Expr("frozen_margin + ?", marginRequired))
+		result := h.db.Model(&models.Strategy{}).Where("id = ?", strategy.ID).UpdateColumn("frozen_margin", gorm.Expr("frozen_margin + ?", marginRequired))
+		if result.Error != nil {
+			fmt.Printf("ERROR: Failed to freeze margin: %v\n", result.Error)
+		} else {
+			fmt.Printf("DEBUG: Frozen margin %s for strategy %s, rows affected: %d\n", marginRequired.String(), strategy.ID, result.RowsAffected)
+		}
 	}
 
 	// Add to matching engine
@@ -539,6 +545,8 @@ func (h *ExchangeHandler) GetBalance(w http.ResponseWriter, r *http.Request) {
 		h.writeError(w, http.StatusNotFound, "STRATEGY_NOT_FOUND", "Strategy not found")
 		return
 	}
+
+	fmt.Printf("DEBUG: GetBalance - Strategy %s - Balance: %s, FrozenMargin: %s\n", strategyID, strategy.Balance.String(), strategy.FrozenMargin.String())
 
 	// Calculate unrealized PnL
 	unrealizedPnl := h.positionManager.CalculateUnrealizedPnl(strategyID)
