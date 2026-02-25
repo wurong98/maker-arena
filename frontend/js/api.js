@@ -176,6 +176,54 @@ const ApiClient = {
      */
     async getMarketTicker() {
         return this.get('/market/ticker');
+    },
+
+    // ===== API Key 管理 =====
+
+    /**
+     * 获取 API Key
+     * @param {string} strategyId - 策略 ID
+     */
+    getApiKey(strategyId) {
+        const keys = JSON.parse(localStorage.getItem('strategy_api_keys') || '{}');
+        return keys[strategyId] || '';
+    },
+
+    /**
+     * 保存 API Key
+     * @param {string} strategyId - 策略 ID
+     * @param {string} apiKey - API Key
+     */
+    setApiKey(strategyId, apiKey) {
+        const keys = JSON.parse(localStorage.getItem('strategy_api_keys') || '{}');
+        keys[strategyId] = apiKey;
+        localStorage.setItem('strategy_api_keys', JSON.stringify(keys));
+    },
+
+    /**
+     * 创建订单
+     * @param {string} strategyId - 策略 ID
+     * @param {Object} orderData - 订单数据
+     */
+    async createOrder(strategyId, orderData) {
+        const apiKey = this.getApiKey(strategyId);
+        if (!apiKey) {
+            throw new Error('请先设置 API Key');
+        }
+        return this.post('/exchange/createOrder', orderData, { 'X-API-Key': apiKey });
+    },
+
+    /**
+     * 取消订单
+     * @param {string} strategyId - 策略 ID
+     * @param {string} orderId - 订单 ID
+     */
+    async cancelOrder(strategyId, orderId) {
+        const apiKey = this.getApiKey(strategyId);
+        if (!apiKey) {
+            throw new Error('请先设置 API Key');
+        }
+        return this.post('/exchange/cancelOrder', { orderId }, { 'X-API-Key': apiKey });
     }
 };
 

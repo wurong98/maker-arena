@@ -60,9 +60,14 @@
                                 <span class="value" id="strategyBalance">-</span>
                             </div>
                             <div class="strategy-stat">
+                                <span class="label">可用保证金</span>
+                                <span class="value" id="strategyAvailableBalance">-</span>
+                            </div>
+                            <div class="strategy-stat">
                                 <span class="label">收益率</span>
                                 <span class="value" id="strategyReturn">-</span>
                             </div>
+                            <button class="btn btn-primary" id="createOrderBtn">下单</button>
                         </div>
                     </div>
                 </div>
@@ -136,10 +141,11 @@
                                         <th>数量</th>
                                         <th>已成交</th>
                                         <th>状态</th>
+                                        <th>操作</th>
                                     </tr>
                                 </thead>
                                 <tbody id="ordersTable">
-                                    <tr><td colspan="8" class="empty-state">请选择策略查看订单</td></tr>
+                                    <tr><td colspan="9" class="empty-state">请选择策略查看订单</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -194,6 +200,68 @@
                 <div class="loading">加载行情中...</div>
             </div>
         </footer>
+    </div>
+
+    <!-- API Key 设置模态框 -->
+    <div class="modal" id="apiKeyModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>设置 API Key</h3>
+                <span class="modal-close" id="closeApiKeyModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>请输入策略的 API Key（兼容 ccxt）</p>
+                <div class="form-group">
+                    <label>API Key</label>
+                    <input type="text" id="apiKeyInput" placeholder="请输入 API Key">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" id="cancelApiKey">取消</button>
+                    <button type="button" class="btn btn-primary" id="saveApiKey">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 下单模态框 -->
+    <div class="modal" id="createOrderModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>创建订单</h3>
+                <span class="modal-close" id="closeCreateOrderModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="createOrderForm">
+                    <div class="form-group">
+                        <label>交易对</label>
+                        <select id="orderSymbol" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>方向</label>
+                        <select id="orderSide" required>
+                            <option value="buy">买入</option>
+                            <option value="sell">卖出</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>类型</label>
+                        <input type="text" value="限价" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>价格</label>
+                        <input type="number" id="orderPrice" step="0.01" required placeholder="请输入价格">
+                    </div>
+                    <div class="form-group">
+                        <label>数量</label>
+                        <input type="number" id="orderQuantity" step="0.001" required placeholder="请输入数量">
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-outline" id="cancelCreateOrder">取消</button>
+                        <button type="submit" class="btn btn-primary">创建</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <script src="js/api.js"></script>

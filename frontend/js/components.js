@@ -197,12 +197,136 @@ const Components = {
     /**
      * 渲染订单表格
      */
-    renderOrdersTable(orders) {
+    renderOrdersTable(orders, canCancel = false) {
         if (!orders || orders.length === 0) {
             return '<tr><td colspan="8" class="empty-state">暂无订单</td></tr>';
         }
 
+        if (canCancel) {
+            return this.renderOrdersTableWithAction(orders, canCancel);
+        }
+
         return orders.map(order => this.renderOrderRow(order)).join('');
+    },
+
+    /**
+     * 渲染 API Key 设置模态框
+     */
+    renderApiKeyModal() {
+        return `
+            <div class="modal active" id="apiKeyModal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>设置 API Key</h3>
+                        <span class="modal-close" id="closeApiKeyModal">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <p>请输入策略的 API Key（兼容 ccxt）</p>
+                        <div class="form-group">
+                            <label>API Key</label>
+                            <input type="text" id="apiKeyInput" placeholder="请输入 API Key">
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-outline" id="cancelApiKey">取消</button>
+                            <button type="button" class="btn btn-primary" id="saveApiKey">保存</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    /**
+     * 渲染下单模态框
+     */
+    renderCreateOrderModal(tickerMap = {}) {
+        const symbols = Object.keys(tickerMap);
+        const symbolOptions = symbols.map(s =>
+            `<option value="${s}">${s}</option>`
+        ).join('');
+
+        return `
+            <div class="modal active" id="createOrderModal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>创建订单</h3>
+                        <span class="modal-close" id="closeCreateOrderModal">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <form id="createOrderForm">
+                            <div class="form-group">
+                                <label>交易对</label>
+                                <select id="orderSymbol" required>${symbolOptions}</select>
+                            </div>
+                            <div class="form-group">
+                                <label>方向</label>
+                                <select id="orderSide" required>
+                                    <option value="buy">买入</option>
+                                    <option value="sell">卖出</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>类型</label>
+                                <input type="text" value="限价" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label>价格</label>
+                                <input type="number" id="orderPrice" step="0.01" required placeholder="请输入价格">
+                            </div>
+                            <div class="form-group">
+                                <label>数量</label>
+                                <input type="number" id="orderQuantity" step="0.001" required placeholder="请输入数量">
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-outline" id="cancelCreateOrder">取消</button>
+                                <button type="submit" class="btn btn-primary">创建</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    /**
+     * 渲染订单表格行（带操作按钮）
+     */
+    renderOrderRowWithAction(order, canCancel = false) {
+        const side = order.side || 'buy';
+        const sideText = side === 'buy' ? '买入' : '卖出';
+        const sideClass = side === 'buy' ? 'long' : 'short';
+
+        const status = order.status || 'pending';
+        const canCancelOrder = canCancel && (status === 'pending' || status === 'partially_filled');
+
+        return `
+            <tr data-order-id="${order.id}">
+                <td>${this.formatTime(order.timestamp || order.time)}</td>
+                <td>${order.symbol || '-'}</td>
+                <td>${order.type === 'limit' ? '限价' : '市价'}</td>
+                <td class="${sideClass}">${sideText}</td>
+                <td>${this.formatNumber(order.price)}</td>
+                <td>${this.formatNumber(order.quantity)}</td>
+                <td>${this.formatNumber(order.filledQuantity || 0)}</td>
+                <td>${this.renderOrderStatus(order.status)}</td>
+                <td>
+                    ${canCancelOrder ? `<button class="btn btn-sm btn-outline cancel-order-btn" data-order-id="${order.id}">取消</button>` : '-'}
+                </td>
+            </tr>
+        `;
+    },
+
+    /**
+     * 渲染订单表格（带操作）
+     */
+    renderOrdersTableWithAction(orders, canCancel = false) {
+        if (!orders || orders.length === 0) {
+            return '<tr><td colspan="9" class="empty-state">暂无订单</td></tr>';
+        }
+
+        return orders.map(order =>
+            this.renderOrderRowWithAction(order, canCancel)
+        ).join('');
     },
 
     /**

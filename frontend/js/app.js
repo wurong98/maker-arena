@@ -13,6 +13,12 @@ const App = {
     // 行情数据
     tickerMap: {},
 
+    // API Key 状态
+    apiKey: '',
+
+    // 保证金率（100倍杠杆）
+    marginRatio: 0.01,
+
     // Chart 实例
     charts: {
         return: null,
@@ -79,6 +85,27 @@ const App = {
                 }
             }
         });
+
+        // 绑定下单事件
+        this.bindOrderEvents();
+    },
+
+    /**
+     * 计算可用保证金
+     * 可用保证金 = 余额 - 持仓保证金占用
+     */
+    calculateAvailableBalance(balance, positions) {
+        if (!positions || positions.length === 0) {
+            return balance;
+        }
+
+        let usedMargin = 0;
+        positions.forEach(pos => {
+            const positionValue = parseFloat(pos.quantity) * parseFloat(pos.entryPrice);
+            usedMargin += positionValue * this.marginRatio;
+        });
+
+        return balance - usedMargin;
     },
 
     /**
@@ -222,6 +249,12 @@ const App = {
 
         // 加载 Tab 数据
         this.loadTabData(activeTab);
+
+        // 加载 API Key
+        this.apiKey = ApiClient.getApiKey(strategy.id);
+
+        // 更新下单按钮状态
+        this.updateOrderButtonState();
     },
 
     /**
@@ -250,6 +283,191 @@ const App = {
     },
 
     /**
+     * 更新下单按钮状态
+     */
+    updateOrderButtonState() {
+        const btn = document.getElementById('createOrderBtn');
+        if (!btn) return;
+
+        if (!this.apiKey) {
+            btn.textContent = '设置 API Key';
+            btn.classList.add('btn-outline');
+            btn.classList.remove('btn-primary');
+        } else {
+            btn.textContent = '下单';
+            btn.classList.add('btn-primary');
+            btn.classList.remove('btn-outline');
+        }
+    },
+
+    /**
+     * 绑定下单相关事件
+     */
+    bindOrderEvents() {
+        // 下单按钮点击
+        const createOrderBtn = document.getElementById('createOrderBtn');
+        if (createOrderBtn) {
+            createOrderBtn.addEventListener('click', () => this.handleCreateOrderClick());
+        }
+
+        // 订单取消按钮（事件委托）
+        document.getElementById('ordersTable').addEventListener('click', (e) => {
+            if (e.target.classList.contains('cancel-order-btn')) {
+                const orderId = e.target.dataset.orderId;
+                this.handleCancelOrder(orderId);
+            }
+        });
+    },
+
+    /**
+     * 处理下单按钮点击
+     */
+    handleCreateOrderClick() {
+        if (!this.apiKey) {
+            this.showApiKeyModal();
+        } else {
+            this.showCreateOrderModal();
+        }
+    },
+
+    /**
+     * 显示 API Key 设置模态框
+     */
+    showApiKeyModal() {
+        // 移除已存在的模态框
+        const existingModal = document.getElementById('apiKeyModal');
+        if (existingModal) existingModal.remove();
+
+        // 添加模态框到页面
+        const modalHtml = Components.renderApiKeyModal();
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        // 绑定事件
+        document.getElementById('closeApiKeyModal').addEventListener('click', () => this.hideApiKeyModal());
+        document.getElementById('cancelApiKey').addEventListener('click', () => this.hideApiKeyModal());
+        document.getElementById('saveApiKey').addEventListener('click', () => this.saveApiKey());
+
+        // 回显已有 API Key
+        const input = document.getElementById('apiKeyInput');
+        if (this.apiKey) {
+            input.value = this.apiKey;
+        }
+    },
+
+    /**
+     * 隐藏 API Key 设置模态框
+     */
+    hideApiKeyModal() {
+        const modal = document.getElementById('apiKeyModal');
+        if (modal) modal.remove();
+    },
+
+    /**
+     * 保存 API Key
+     */
+    saveApiKey() {
+        const input = document.getElementById('apiKeyInput');
+        const apiKey = input.value.trim();
+
+        if (!apiKey) {
+            alert('请输入 API Key');
+            return;
+        }
+
+        // 保存到 localStorage
+        ApiClient.setApiKey(this.currentStrategy.id, apiKey);
+        this.apiKey = apiKey;
+
+        // 更新按钮状态
+        this.updateOrderButtonState();
+
+        // 隐藏模态框
+        this.hideApiKeyModal();
+
+        // 显示下单模态框
+        this.showCreateOrderModal();
+    },
+
+    /**
+     * 显示下单模态框
+     */
+    showCreateOrderModal() {
+        // 移除已存在的模态框
+        const existingModal = document.getElementById('createOrderModal');
+        if (existingModal) existingModal.remove();
+
+        // 添加模态框到页面
+        const modalHtml = Components.renderCreateOrderModal(this.tickerMap);
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        // 绑定事件
+        document.getElementById('closeCreateOrderModal').addEventListener('click', () => this.hideCreateOrderModal());
+        document.getElementById('cancelCreateOrder').addEventListener('click', () => this.hideCreateOrderModal());
+        document.getElementById('createOrderForm').addEventListener('submit', (e) => this.handleCreateOrderSubmit(e));
+    },
+
+    /**
+     * 隐藏下单模态框
+     */
+    hideCreateOrderModal() {
+        const modal = document.getElementById('createOrderModal');
+        if (modal) modal.remove();
+    },
+
+    /**
+     * 处理创建订单提交
+     */
+    async handleCreateOrderSubmit(e) {
+        e.preventDefault();
+
+        const orderData = {
+            symbol: document.getElementById('orderSymbol').value,
+            side: document.getElementById('orderSide').value,
+            type: 'limit',
+            quantity: document.getElementById('orderQuantity').value,
+            price: document.getElementById('orderPrice').value
+        };
+
+        try {
+            await ApiClient.createOrder(this.currentStrategy.id, orderData);
+
+            // 隐藏模态框
+            this.hideCreateOrderModal();
+
+            // 刷新订单列表
+            this.loadOrders();
+
+            // 显示成功提示
+            alert('订单创建成功');
+        } catch (error) {
+            console.error('创建订单失败:', error);
+            alert('创建订单失败: ' + (error.message || '未知错误'));
+        }
+    },
+
+    /**
+     * 处理取消订单
+     */
+    async handleCancelOrder(orderId) {
+        if (!confirm('确定要取消该订单吗？')) {
+            return;
+        }
+
+        try {
+            await ApiClient.cancelOrder(this.currentStrategy.id, orderId);
+
+            // 刷新订单列表
+            this.loadOrders();
+
+            // 显示成功提示
+            alert('订单已取消');
+        } catch (error) {
+            console.error('取消订单失败:', error);
+            alert('取消订单失败: ' + (error.message || '未知错误'));
+        }
+    },
+
+    /**
      * 加载持仓数据
      */
     async loadPositions() {
@@ -259,6 +477,12 @@ const App = {
 
             document.getElementById('positionsTable').innerHTML =
                 Components.renderPositionsTable(positionList, this.tickerMap);
+
+            // 计算并显示可用保证金
+            const balance = this.currentStrategy.balance || 0;
+            const availableBalance = this.calculateAvailableBalance(balance, positionList);
+            document.getElementById('strategyAvailableBalance').textContent =
+                `${Components.formatNumber(availableBalance)} USDC`;
         } catch (error) {
             console.error('Failed to load positions:', error);
             document.getElementById('positionsTable').innerHTML =
@@ -299,8 +523,9 @@ const App = {
             const orders = await ApiClient.getOrders(this.currentStrategy.id, page, 20);
             const orderList = orders.data || orders.orders || [];
 
+            const canCancel = !!this.apiKey;
             document.getElementById('ordersTable').innerHTML =
-                Components.renderOrdersTable(orderList);
+                Components.renderOrdersTable(orderList, canCancel);
 
             // 渲染分页
             const totalPages = orders.totalPages || Math.ceil((orders.total || 0) / 20);
@@ -310,7 +535,7 @@ const App = {
         } catch (error) {
             console.error('Failed to load orders:', error);
             document.getElementById('ordersTable').innerHTML =
-                '<tr><td colspan="8" class="empty-state">加载失败</td></tr>';
+                '<tr><td colspan="9" class="empty-state">加载失败</td></tr>';
         }
     },
 
