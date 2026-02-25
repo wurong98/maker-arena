@@ -479,9 +479,9 @@ const App = {
             document.getElementById('positionsTable').innerHTML =
                 Components.renderPositionsTable(positionList, this.tickerMap);
 
-            // 计算并显示可用保证金
-            const balance = this.currentStrategy.balance || 0;
-            const availableBalance = this.calculateAvailableBalance(balance, positionList);
+            // 使用后端返回的可用保证金
+            const balanceData = await ApiClient.getBalance(this.currentStrategy.id);
+            const availableBalance = balanceData.availableMargin || balanceData.available || 0;
             document.getElementById('strategyAvailableBalance').textContent =
                 `${Components.formatNumber(availableBalance)} USDC`;
         } catch (error) {

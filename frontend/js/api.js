@@ -126,6 +126,14 @@ const ApiClient = {
     },
 
     /**
+     * 获取账户余额
+     * @param {string} strategyId - 策略 ID
+     */
+    async getBalance(strategyId) {
+        return this.get('/exchange/getBalance', { strategy_id: strategyId });
+    },
+
+    /**
      * 获取成交记录
      * @param {string} strategyId - 策略 ID
      * @param {number} page - 页码

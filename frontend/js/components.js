@@ -423,8 +423,8 @@ const Components = {
     renderStatistics(stats) {
         return {
             strategyCount: stats.totalStrategies || stats.strategyCount || 0,
-            tradeCount: stats.totalTrades || stats.tradeCount || 0,
-            orderCount: stats.pendingOrders || stats.orderCount || 0
+            tradeCount: stats.totalFills || stats.totalTrades || stats.tradeCount || 0,
+            orderCount: stats.openOrders || stats.pendingOrders || stats.orderCount || 0
         };
     }
 };

@@ -563,6 +563,9 @@ func (h *ExchangeHandler) GetBalance(w http.ResponseWriter, r *http.Request) {
 	// Calculate available margin
 	availableMargin := strategy.Balance.Sub(totalMargin)
 
+	fmt.Printf("DEBUG: Balance=%s, UsedMargin=%s, FrozenMargin=%s, TotalMargin=%s, AvailableMargin=%s\n",
+		strategy.Balance.String(), usedMargin.String(), strategy.FrozenMargin.String(), totalMargin.String(), availableMargin.String())
+
 	response := GetBalanceResponse{
 		Balance:         strategy.Balance.String(),
 		FrozenMargin:    strategy.FrozenMargin.String(),
