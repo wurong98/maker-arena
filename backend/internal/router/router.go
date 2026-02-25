@@ -19,6 +19,17 @@ func Setup(db *gorm.DB, cfg *config.Config, matchingEngine *engine.MatchingEngin
 	exchangeHandler := handlers.NewExchangeHandler(db, cfg, matchingEngine, positionManager)
 	dataHandler := handlers.NewDataHandler(db, cfg, matchingEngine)
 
+	// Serve static frontend files
+	frontendDir := "./frontend"
+	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, frontendDir+"/index.html")
+	})
+	r.HandleFunc("/strategy", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, frontendDir+"/strategy.html")
+	})
+	r.PathPrefix("/css/").Handler(http.StripPrefix("/css/", http.FileServer(http.Dir(frontendDir+"/css"))))
+	r.PathPrefix("/js/").Handler(http.StripPrefix("/js/", http.FileServer(http.Dir(frontendDir+"/js"))))
+
 	// API v1 routes
 	api := r.PathPrefix("/api/v1").Subrouter()
 

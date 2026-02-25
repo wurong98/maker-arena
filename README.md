@@ -59,16 +59,10 @@ go run cmd/server/main.go
 
 ### 5. 启动前端
 
-```bash
-# 方式1: 直接打开
-cd frontend
-# 用浏览器打开 index.html
+启动后端后，前端页面会通过 Go 服务自动托管：
 
-# 方式2: 使用 Python
-cd frontend
-python3 -m http.server 8081
-# 访问 http://localhost:8081
-```
+- 交易界面：http://localhost:8080/
+- 策略管理：http://localhost:8080/strategy
 
 ## 系统架构
 
