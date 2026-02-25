@@ -8,8 +8,8 @@ import (
 
 // AccountSnapshot represents an account balance snapshot
 type AccountSnapshot struct {
-	ID            string          `gorm:"primaryKey;type:uuid" json:"id"`
-	StrategyID    string          `gorm:"type:uuid;index" json:"strategyId"`
+	ID            string          `gorm:"primaryKey;type:uuid;not null" json:"id"`
+	StrategyID    string          `gorm:"type:uuid;index;not null" json:"strategyId"`
 	Balance       decimal.Decimal `gorm:"type:numeric(20,8)" json:"balance"`
 	UnrealizedPnl decimal.Decimal `gorm:"type:numeric(20,8)" json:"unrealizedPnl"`
 	TotalEquity   decimal.Decimal `gorm:"type:numeric(20,8)" json:"totalEquity"`
@@ -23,9 +23,9 @@ func (AccountSnapshot) TableName() string {
 
 // PositionSnapshot represents a position PnL snapshot
 type PositionSnapshot struct {
-	ID            string          `gorm:"primaryKey;type:uuid" json:"id"`
-	StrategyID    string          `gorm:"type:uuid;index" json:"strategyId"`
-	Symbol        string          `gorm:"type:varchar(32)" json:"symbol"`
+	ID            string          `gorm:"primaryKey;type:uuid;not null" json:"id"`
+	StrategyID    string          `gorm:"type:uuid;index;not null" json:"strategyId"`
+	Symbol        string          `gorm:"type:varchar(32);not null" json:"symbol"`
 	UnrealizedPnl decimal.Decimal `gorm:"type:numeric(20,8)" json:"unrealizedPnl"`
 	PositionValue decimal.Decimal `gorm:"type:numeric(20,8)" json:"positionValue"`
 	AvgPrice      decimal.Decimal `gorm:"type:numeric(20,8)" json:"avgPrice"`

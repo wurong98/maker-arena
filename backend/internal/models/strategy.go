@@ -8,9 +8,9 @@ import (
 
 // Strategy represents a trading strategy
 type Strategy struct {
-	ID          string          `gorm:"primaryKey;type:uuid" json:"id"`
-	APIKey      string          `gorm:"uniqueIndex;type:varchar(64)" json:"apiKey"`
-	Name        string          `gorm:"type:varchar(128)" json:"name"`
+	ID          string          `gorm:"primaryKey;type:uuid;not null" json:"id"`
+	APIKey      string          `gorm:"uniqueIndex;type:varchar(64);not null" json:"apiKey"`
+	Name        string          `gorm:"type:varchar(128);not null" json:"name"`
 	Description string          `gorm:"type:text" json:"description"`
 	Enabled     bool            `gorm:"default:true" json:"enabled"`
 	Balance     decimal.Decimal `gorm:"type:numeric(20,8);default:5000" json:"balance"`
