@@ -407,15 +407,10 @@ const Components = {
         }
 
         return tickers.map(ticker => {
-            const change = ticker.change24h || 0;
-            const changeClass = change >= 0 ? 'positive' : 'negative';
-            const changeText = this.formatPercent(change);
-
             return `
                 <div class="ticker-item">
                     <span class="ticker-symbol">${ticker.symbol}</span>
                     <span class="ticker-price">$${this.formatNumber(ticker.price)}</span>
-                    <span class="ticker-change ${changeClass}">${changeText}</span>
                     <span class="ticker-time">${this.formatTimeShort(ticker.updatedAt)}</span>
                 </div>
             `;

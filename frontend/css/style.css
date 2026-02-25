@@ -548,23 +548,6 @@ a:hover {
     color: var(--text-primary);
 }
 
-.ticker-change {
-    font-size: 12px;
-    font-weight: 500;
-    padding: 2px 6px;
-    border-radius: 4px;
-}
-
-.ticker-change.positive {
-    color: var(--color-success);
-    background-color: rgba(14, 203, 129, 0.1);
-}
-
-.ticker-change.negative {
-    color: var(--color-danger);
-    background-color: rgba(246, 70, 93, 0.1);
-}
-
 .ticker-time {
     font-size: 12px;
     color: var(--text-muted);
