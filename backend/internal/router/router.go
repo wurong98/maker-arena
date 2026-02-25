@@ -68,3 +68,22 @@ func Setup(db *gorm.DB, cfg *config.Config, matchingEngine *engine.MatchingEngin
 
 	return r
 }
+
+// getFrontendDir returns the frontend directory path
+func getFrontendDir() string {
+	// Try multiple paths to find frontend directory
+	paths := []string{
+		"./frontend",
+		"../frontend",
+		filepath.Join(filepath.Dir(os.Args[0]), "frontend"),
+	}
+
+	for _, p := range paths {
+		if _, err := os.Stat(p); err == nil {
+			return p
+		}
+	}
+
+	// Fallback to default
+	return "./frontend"
+}

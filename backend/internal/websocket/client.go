@@ -73,7 +73,7 @@ func (c *BinanceClient) Stop() {
 func (c *BinanceClient) connect() {
 	defer c.wg.Done()
 
-	// Build stream URL: wss://stream.binance.com:9443/ws/btcusdc@trade/ethusdc@trade/...
+	// Build stream URL: wss://fstream.binance.com/ws/btcusdc@trade/ethusdc@trade/...
 	streams := make([]string, len(c.symbols))
 	for i, symbol := range c.symbols {
 		streams[i] = fmt.Sprintf("%s@trade", strings.ToLower(symbol))
@@ -129,10 +129,34 @@ func (c *BinanceClient) handleMessages() {
 		return nil
 	})
 
+	// Start ping goroutine to keep connection alive
+	pingStop := make(chan struct{})
+	c.wg.Add(1)
+	go func() {
+		defer c.wg.Done()
+		ticker := time.NewTicker(30 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-pingStop:
+				return
+			case <-ticker.C:
+				c.mu.Lock()
+				if c.conn != nil {
+					if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+						log.Printf("Failed to send ping: %v", err)
+					}
+				}
+				c.mu.Unlock()
+			}
+		}
+	}()
+
 	for {
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
 			log.Printf("WebSocket read error: %v", err)
+			close(pingStop)
 			return
 		}
 
