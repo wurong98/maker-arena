@@ -304,11 +304,12 @@ const App = {
      * 绑定下单相关事件
      */
     bindOrderEvents() {
-        // 下单按钮点击
-        const createOrderBtn = document.getElementById('createOrderBtn');
-        if (createOrderBtn) {
-            createOrderBtn.addEventListener('click', () => this.handleCreateOrderClick());
-        }
+        // 下单按钮点击（使用事件委托）
+        document.addEventListener('click', (e) => {
+            if (e.target && e.target.id === 'createOrderBtn') {
+                this.handleCreateOrderClick();
+            }
+        });
 
         // 订单取消按钮（事件委托）
         document.getElementById('ordersTable').addEventListener('click', (e) => {
