@@ -11,7 +11,11 @@ import (
 
 	"github.com/maker-arena/backend/internal/config"
 	"github.com/maker-arena/backend/internal/database"
+	"github.com/maker-arena/backend/internal/engine"
 	"github.com/maker-arena/backend/internal/router"
+	"github.com/maker-arena/backend/internal/scheduler"
+	"github.com/maker-arena/backend/internal/websocket"
+	"github.com/shopspring/decimal"
 )
 
 func main() {
@@ -32,8 +36,41 @@ func main() {
 		log.Fatalf("Failed to run migrations: %v", err)
 	}
 
+	// Parse maker fee rate
+	makerFeeRate, err := decimal.NewFromString(cfg.Trading.MakerFeeRate)
+	if err != nil {
+		log.Fatalf("Invalid maker fee rate: %v", err)
+	}
+
+	// Create position manager
+	positionManager := engine.NewPositionManager(db, 100, func(symbol string) *engine.Ticker {
+		return nil // Will be set later
+	})
+	positionManager.Start()
+
+	// Create matching engine
+	matchingEngine := engine.NewMatchingEngine(db, makerFeeRate, positionManager)
+	matchingEngine.Start()
+
+	// Set ticker getter for position manager
+	positionManager.SetTickerGetter(func(symbol string) *engine.Ticker {
+		return matchingEngine.GetTicker(symbol)
+	})
+
+	// Create snapshot scheduler
+	snapshotInterval, err := cfg.Snapshot.IntervalDuration()
+	if err != nil {
+		log.Fatalf("Invalid snapshot interval: %v", err)
+	}
+	snapshotScheduler := scheduler.NewSnapshotScheduler(db, snapshotInterval, positionManager, matchingEngine)
+	snapshotScheduler.Start()
+
+	// Create Binance WebSocket client
+	binanceClient := websocket.NewBinanceClient(cfg.Binance.WSURL, cfg.Symbols, matchingEngine)
+	binanceClient.Start()
+
 	// Create router
-	r := router.Setup(db, cfg)
+	r := router.Setup(db, cfg, matchingEngine, positionManager)
 
 	// Create HTTP server
 	srv := &http.Server{
@@ -63,6 +100,18 @@ func main() {
 	// 4. Close WebSocket connections
 	// 5. Shutdown HTTP server
 
+	// Stop Binance WebSocket client
+	binanceClient.Stop()
+
+	// Stop snapshot scheduler
+	snapshotScheduler.Stop()
+
+	// Stop matching engine
+	matchingEngine.Stop()
+
+	// Stop position manager
+	positionManager.Stop()
+
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
@@ -70,11 +119,6 @@ func main() {
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Printf("Server forced to shutdown: %v", err)
 	}
-
-	// Additional cleanup steps (to be implemented as services are added):
-	// - Close WebSocket connections
-	// - Save in-memory state to database
-	// - Close database connections
 
 	log.Println("Server exited properly")
 }
