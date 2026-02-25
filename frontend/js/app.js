@@ -166,8 +166,8 @@ const App = {
      */
     async loadTickers() {
         try {
-            const tickers = await ApiClient.getMarketTicker();
-            const tickerList = tickers.data || tickers || [];
+            const response = await ApiClient.getMarketTicker();
+            const tickerList = response.tickers || [];
 
             // 更新行情映射
             tickerList.forEach(ticker => {
