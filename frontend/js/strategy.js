@@ -64,9 +64,11 @@ const StrategyApp = {
             this.createStrategy();
         });
 
-        // 获取 API-Key 按钮
-        document.getElementById('getAPIKeyBtn').addEventListener('click', () => {
-            this.showAPIKeyModal();
+        // 获取 API-Key 按钮（使用事件委托）
+        document.addEventListener('click', (e) => {
+            if (e.target && e.target.id === 'getAPIKeyBtn') {
+                this.showAPIKeyModal();
+            }
         });
     },
 

@@ -214,7 +214,7 @@
             <div class="modal-body">
                 <p>请输入策略的 API Key（兼容 ccxt）</p>
                 <div class="form-group">
-                    <label>API Key</label>
+                    <label for="apiKeyInput">API Key</label>
                     <input type="text" id="apiKeyInput" placeholder="请输入 API Key">
                 </div>
                 <div class="form-actions">
@@ -235,26 +235,26 @@
             <div class="modal-body">
                 <form id="createOrderForm">
                     <div class="form-group">
-                        <label>交易对</label>
+                        <label for="orderSymbol">交易对</label>
                         <select id="orderSymbol" required></select>
                     </div>
                     <div class="form-group">
-                        <label>方向</label>
+                        <label for="orderSide">方向</label>
                         <select id="orderSide" required>
                             <option value="buy">买入</option>
                             <option value="sell">卖出</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>类型</label>
-                        <input type="text" value="限价" disabled>
+                        <label for="orderType">类型</label>
+                        <input type="text" id="orderType" value="限价" disabled>
                     </div>
                     <div class="form-group">
-                        <label>价格</label>
+                        <label for="orderPrice">价格</label>
                         <input type="number" id="orderPrice" step="0.01" required placeholder="请输入价格">
                     </div>
                     <div class="form-group">
-                        <label>数量</label>
+                        <label for="orderQuantity">数量</label>
                         <input type="number" id="orderQuantity" step="0.001" required placeholder="请输入数量">
                     </div>
                     <div class="form-actions">

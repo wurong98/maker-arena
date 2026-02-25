@@ -223,7 +223,7 @@ const Components = {
                     <div class="modal-body">
                         <p>请输入策略的 API Key（兼容 ccxt）</p>
                         <div class="form-group">
-                            <label>API Key</label>
+                            <label for="apiKeyInput">API Key</label>
                             <input type="text" id="apiKeyInput" placeholder="请输入 API Key">
                         </div>
                         <div class="form-actions">
