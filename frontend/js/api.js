@@ -122,7 +122,7 @@ const ApiClient = {
      * @param {string} strategyId - 策略 ID
      */
     async getPosition(strategyId) {
-        return this.get('/exchange/getPosition', { strategyId });
+        return this.get('/exchange/getPosition', { strategy_id: strategyId });
     },
 
     /**
@@ -132,7 +132,7 @@ const ApiClient = {
      * @param {number} limit - 每页数量
      */
     async getFills(strategyId, page = 1, limit = 20) {
-        return this.get('/fills', { strategyId, page, limit });
+        return this.get('/fills', { strategy_id: strategyId, page, limit });
     },
 
     /**
@@ -142,7 +142,7 @@ const ApiClient = {
      * @param {number} limit - 每页数量
      */
     async getOrders(strategyId, page = 1, limit = 20) {
-        return this.get('/exchange/getOrders', { strategyId, page, limit });
+        return this.get('/exchange/getOrders', { strategy_id: strategyId, page, limit });
     },
 
     /**
@@ -150,7 +150,7 @@ const ApiClient = {
      * @param {string} strategyId - 策略 ID
      */
     async getAccountSnapshots(strategyId) {
-        return this.get('/snapshots/account', { strategyId });
+        return this.get('/snapshots/account', { strategy_id: strategyId });
     },
 
     /**
@@ -158,7 +158,7 @@ const ApiClient = {
      * @param {string} strategyId - 策略 ID
      */
     async getPositionSnapshots(strategyId) {
-        return this.get('/snapshots/position', { strategyId });
+        return this.get('/snapshots/position', { strategy_id: strategyId });
     },
 
     /**
@@ -168,7 +168,7 @@ const ApiClient = {
      * @param {number} limit - 每页数量
      */
     async getLiquidations(strategyId, page = 1, limit = 20) {
-        return this.get('/liquidations', { strategyId, page, limit });
+        return this.get('/liquidations', { strategy_id: strategyId, page, limit });
     },
 
     /**
@@ -223,7 +223,7 @@ const ApiClient = {
         if (!apiKey) {
             throw new Error('请先设置 API Key');
         }
-        return this.post('/exchange/cancelOrder', { orderId }, { 'X-API-Key': apiKey });
+        return this.post('/exchange/cancelOrder', { order_id: orderId }, { 'X-API-Key': apiKey });
     }
 };
 
