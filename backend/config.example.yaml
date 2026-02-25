@@ -13,7 +13,7 @@ admin:
   password: "your-admin-password-here"
 
 binance:
-  ws_url: "wss://stream.binance.com:9443/ws"
+  ws_url: "wss://fstream.binance.com/ws"
 
 symbols:
   - "btcusdc"
