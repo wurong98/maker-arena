@@ -12,11 +12,11 @@ const ApiClient = {
     async request(endpoint, options = {}) {
         const url = `${API_BASE_URL}${endpoint}`;
         const config = {
+            ...options,
             headers: {
                 'Content-Type': 'application/json',
                 ...options.headers
-            },
-            ...options
+            }
         };
 
         try {
