@@ -1,0 +1,14 @@
+# Config
+backend/config.yaml
+frontend/config.js
+
+# Build
+backend/bin/
+*.exe
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
