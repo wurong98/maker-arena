@@ -199,7 +199,7 @@ const Components = {
      */
     renderOrdersTable(orders, canCancel = false) {
         if (!orders || orders.length === 0) {
-            return '<tr><td colspan="8" class="empty-state">暂无订单</td></tr>';
+            return '<tr><td colspan="9" class="empty-state">暂无订单</td></tr>';
         }
 
         if (canCancel) {

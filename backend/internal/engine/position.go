@@ -331,9 +331,7 @@ func (pm *PositionManager) Liquidate(strategyID, symbol string) {
 // GetPositions returns positions for a strategy
 func (pm *PositionManager) GetPositions(strategyID, symbol string) []Position {
 	pm.mu.RLock()
-	defer pm.mu.RUnlock()
-
-	var result []Position
+	var positions []*Position
 	for _, p := range pm.positions {
 		if p.StrategyID != strategyID {
 			continue
@@ -341,8 +339,14 @@ func (pm *PositionManager) GetPositions(strategyID, symbol string) []Position {
 		if symbol != "" && p.Symbol != symbol {
 			continue
 		}
+		positions = append(positions, p)
+	}
+	pm.mu.RUnlock()
 
-		// Update current price from ticker
+	// Update prices outside of lock to avoid deadlock
+	var result []Position
+	for _, p := range positions {
+		// Update current price from ticker (outside of lock)
 		if tg := pm.tickerGetter; tg != nil {
 			ticker := tg(p.Symbol)
 			if ticker != nil {
@@ -351,7 +355,6 @@ func (pm *PositionManager) GetPositions(strategyID, symbol string) []Position {
 				p.PositionValue = p.CurrentPrice.Mul(p.Quantity)
 			}
 		}
-
 		result = append(result, *p)
 	}
 
@@ -361,15 +364,18 @@ func (pm *PositionManager) GetPositions(strategyID, symbol string) []Position {
 // CalculateUnrealizedPnl calculates total unrealized PnL for a strategy
 func (pm *PositionManager) CalculateUnrealizedPnl(strategyID string) decimal.Decimal {
 	pm.mu.RLock()
-	defer pm.mu.RUnlock()
-
-	total := decimal.Zero
+	var positions []*Position
 	for _, p := range pm.positions {
 		if p.StrategyID != strategyID {
 			continue
 		}
+		positions = append(positions, p)
+	}
+	pm.mu.RUnlock()
 
-		// Update current price from ticker
+	// Update prices outside of lock to avoid deadlock
+	total := decimal.Zero
+	for _, p := range positions {
 		if tg := pm.tickerGetter; tg != nil {
 			ticker := tg(p.Symbol)
 			if ticker != nil {
@@ -377,7 +383,6 @@ func (pm *PositionManager) CalculateUnrealizedPnl(strategyID string) decimal.Dec
 				p.UnrealizedPnl = pm.calculateUnrealizedPnl(p)
 			}
 		}
-
 		total = total.Add(p.UnrealizedPnl)
 	}
 
@@ -387,14 +392,17 @@ func (pm *PositionManager) CalculateUnrealizedPnl(strategyID string) decimal.Dec
 // CalculateUsedMargin calculates used margin for a strategy
 func (pm *PositionManager) CalculateUsedMargin(strategyID string) decimal.Decimal {
 	pm.mu.RLock()
-	defer pm.mu.RUnlock()
-
-	total := decimal.Zero
+	var positions []*Position
 	for _, p := range pm.positions {
 		if p.StrategyID != strategyID {
 			continue
 		}
+		positions = append(positions, p)
+	}
+	pm.mu.RUnlock()
 
+	total := decimal.Zero
+	for _, p := range positions {
 		if p.PositionValue.IsZero() && p.EntryPrice.GreaterThan(decimal.Zero) && p.Quantity.GreaterThan(decimal.Zero) {
 			p.PositionValue = p.EntryPrice.Mul(p.Quantity)
 		}

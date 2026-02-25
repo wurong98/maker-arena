@@ -385,6 +385,9 @@ const App = {
         // 隐藏模态框
         this.hideApiKeyModal();
 
+        // 刷新订单列表（显示取消按钮）
+        this.loadOrders();
+
         // 显示下单模态框
         this.showCreateOrderModal();
     },

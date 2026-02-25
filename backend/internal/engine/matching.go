@@ -498,21 +498,28 @@ func (me *MatchingEngine) executeFill(order *Order, fillQty decimal.Decimal, pri
 	tx.Commit()
 }
 
-// GetTicker returns the ticker for a symbol
+// GetTicker returns a copy of the ticker for a symbol (to avoid deadlock)
 func (me *MatchingEngine) GetTicker(symbol string) *Ticker {
 	me.mu.RLock()
 	defer me.mu.RUnlock()
-	return me.tickers[symbol]
+
+	if ticker, ok := me.tickers[symbol]; ok {
+		// Return a copy to avoid deadlock
+		t := *ticker
+		return &t
+	}
+	return nil
 }
 
-// GetAllTickers returns all tickers
+// GetAllTickers returns all tickers (copies to avoid deadlock)
 func (me *MatchingEngine) GetAllTickers() map[string]*Ticker {
 	me.mu.RLock()
 	defer me.mu.RUnlock()
 
 	result := make(map[string]*Ticker)
 	for k, v := range me.tickers {
-		result[k] = v
+		t := *v
+		result[k] = &t
 	}
 	return result
 }
