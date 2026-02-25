@@ -17,17 +17,15 @@ git clone <repository-url>
 cd maker-arena
 ```
 
-### 2. 启动 PostgreSQL
+### 2. 创建数据库
 
 ```bash
-# 使用 Docker
-docker run -d \
-  --name maker-arena-db \
-  -e POSTGRES_USER=postgres \
-  -e POSTGRES_PASSWORD=password \
-  -e POSTGRES_DB=maker_arena \
-  -p 5432:5432 \
-  postgres:14
+# 假设 PostgreSQL 已安装并运行
+# 创建数据库
+createdb -U postgres maker_arena
+
+# 或使用 psql
+psql -U postgres -c "CREATE DATABASE maker_arena;"
 ```
 
 ### 3. 配置数据库
