@@ -37,6 +37,90 @@ const StrategyApp = {
                 this.selectStrategy(strategyId);
             }
         });
+
+        // 新建策略按钮
+        document.getElementById('createStrategyBtn').addEventListener('click', () => {
+            this.showCreateModal();
+        });
+
+        // 关闭模态框
+        document.getElementById('closeModal').addEventListener('click', () => {
+            this.hideCreateModal();
+        });
+        document.getElementById('cancelCreate').addEventListener('click', () => {
+            this.hideCreateModal();
+        });
+
+        // 点击模态框背景关闭
+        document.getElementById('createStrategyModal').addEventListener('click', (e) => {
+            if (e.target.id === 'createStrategyModal') {
+                this.hideCreateModal();
+            }
+        });
+
+        // 提交创建表单
+        document.getElementById('createStrategyForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.createStrategy();
+        });
+    },
+
+    /**
+     * 显示新建模态框
+     */
+    showCreateModal() {
+        document.getElementById('createStrategyModal').style.display = 'flex';
+        document.getElementById('strategyName').focus();
+    },
+
+    /**
+     * 隐藏新建模态框
+     */
+    hideCreateModal() {
+        document.getElementById('createStrategyModal').style.display = 'none';
+        document.getElementById('createStrategyForm').reset();
+    },
+
+    /**
+     * 创建策略
+     */
+    async createStrategy() {
+        const name = document.getElementById('strategyName').value.trim();
+        const description = document.getElementById('strategyDescription').value.trim();
+        const balance = document.getElementById('strategyBalance').value;
+        const adminPassword = document.getElementById('adminPassword').value;
+
+        if (!name) {
+            alert('请输入策略名称');
+            return;
+        }
+
+        if (!balance || parseFloat(balance) <= 0) {
+            alert('请输入有效的初始资金');
+            return;
+        }
+
+        if (!adminPassword) {
+            alert('请输入管理员密码');
+            return;
+        }
+
+        try {
+            const strategy = {
+                name: name,
+                description: description,
+                balance: balance
+            };
+
+            await ApiClient.createStrategy(strategy, adminPassword);
+
+            alert('策略创建成功！');
+            this.hideCreateModal();
+            await this.loadStrategies();
+        } catch (error) {
+            console.error('Failed to create strategy:', error);
+            alert('创建失败: ' + (error.message || '请检查管理员密码'));
+        }
     },
 
     /**

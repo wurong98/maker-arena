@@ -43,10 +43,11 @@ const ApiClient = {
     /**
      * POST 请求
      */
-    async post(endpoint, data = {}) {
+    async post(endpoint, data = {}, customHeaders = {}) {
         return this.request(endpoint, {
             method: 'POST',
-            body: JSON.stringify(data)
+            body: JSON.stringify(data),
+            headers: customHeaders
         });
     },
 
@@ -63,8 +64,8 @@ const ApiClient = {
     /**
      * DELETE 请求
      */
-    async delete(endpoint) {
-        return this.request(endpoint, { method: 'DELETE' });
+    async delete(endpoint, customHeaders = {}) {
+        return this.request(endpoint, { method: 'DELETE', headers: customHeaders });
     },
 
     // ===== API 接口 =====
@@ -76,6 +77,32 @@ const ApiClient = {
      */
     async getStrategies(page = 1, limit = 20) {
         return this.get('/strategies', { page, limit });
+    },
+
+    /**
+     * 创建策略
+     * @param {Object} strategy - 策略数据
+     * @param {string} strategy.name - 策略名称
+     * @param {string} strategy.description - 描述
+     * @param {string} strategy.balance - 初始资金
+     * @param {string} strategy.apiKey - API 密钥
+     * @param {string} adminPassword - 管理员密码
+     */
+    async createStrategy(strategy, adminPassword) {
+        return this.post('/strategies', strategy, {
+            headers: { 'X-Admin-Password': adminPassword }
+        });
+    },
+
+    /**
+     * 删除策略
+     * @param {string} id - 策略 ID
+     * @param {string} adminPassword - 管理员密码
+     */
+    async deleteStrategy(id, adminPassword) {
+        return this.delete(`/strategies/${id}`, {
+            headers: { 'X-Admin-Password': adminPassword }
+        });
     },
 
     /**

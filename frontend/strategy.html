@@ -28,6 +28,7 @@
                 <div class="panel">
                     <div class="panel-header">
                         <h3>策略列表</h3>
+                        <button class="btn btn-primary" id="createStrategyBtn">新建策略</button>
                     </div>
                     <div class="panel-body">
                         <div class="strategy-list-full" id="strategyManagementList">
@@ -92,5 +93,39 @@
     <script src="js/api.js"></script>
     <script src="js/components.js"></script>
     <script src="js/strategy.js"></script>
+
+    <!-- 新建策略模态框 -->
+    <div class="modal" id="createStrategyModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>新建策略</h3>
+                <span class="modal-close" id="closeModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="createStrategyForm">
+                    <div class="form-group">
+                        <label>策略名称</label>
+                        <input type="text" id="strategyName" required placeholder="请输入策略名称">
+                    </div>
+                    <div class="form-group">
+                        <label>描述</label>
+                        <textarea id="strategyDescription" placeholder="请输入策略描述（可选）"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>初始资金 (USDT)</label>
+                        <input type="number" id="strategyBalance" required placeholder="请输入初始资金" value="10000">
+                    </div>
+                    <div class="form-group">
+                        <label>管理员密码</label>
+                        <input type="password" id="adminPassword" required placeholder="请输入管理员密码">
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-outline" id="cancelCreate">取消</button>
+                        <button type="submit" class="btn btn-primary">创建</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
