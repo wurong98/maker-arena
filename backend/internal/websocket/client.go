@@ -152,6 +152,9 @@ func (c *BinanceClient) handleMessages() {
 				if c.conn != nil {
 					if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 						log.Printf("Failed to send ping: %v", err)
+						c.mu.Unlock()
+						c.conn.Close()
+						return
 					}
 				}
 				c.mu.Unlock()
