@@ -89,9 +89,7 @@ const ApiClient = {
      * @param {string} adminPassword - 管理员密码
      */
     async createStrategy(strategy, adminPassword) {
-        return this.post('/strategies', strategy, {
-            headers: { 'X-Admin-Password': adminPassword }
-        });
+        return this.post('/strategies', strategy, { 'X-Admin-Password': adminPassword });
     },
 
     /**
@@ -100,9 +98,7 @@ const ApiClient = {
      * @param {string} adminPassword - 管理员密码
      */
     async deleteStrategy(id, adminPassword) {
-        return this.delete(`/strategies/${id}`, {
-            headers: { 'X-Admin-Password': adminPassword }
-        });
+        return this.delete(`/strategies/${id}`, { 'X-Admin-Password': adminPassword });
     },
 
     /**
