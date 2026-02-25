@@ -12,3 +12,7 @@ backend/bin/
 
 # OS
 .DS_Store
+
+# Worktrees
+.worktrees/
+worktrees/
