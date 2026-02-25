@@ -166,7 +166,7 @@ func (h *ExchangeHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 
 	// Parse quantity
 	quantity, err := decimal.NewFromString(req.Quantity)
-	if err != nil || quantity.LessThan(decimal.NewFromInt(1000)) { // Min quantity 0.001
+	if err != nil || quantity.LessThan(decimal.NewFromInt(1)) { // Min quantity 0.001
 		h.writeError(w, http.StatusBadRequest, "INVALID_QUANTITY", "Invalid quantity")
 		return
 	}
