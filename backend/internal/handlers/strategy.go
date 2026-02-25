@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -134,7 +133,6 @@ type CreateStrategyRequest struct {
 func (h *StrategyHandler) Create(w http.ResponseWriter, r *http.Request) {
 	// Verify admin password
 	password := r.Header.Get("X-Admin-Password")
-	fmt.Printf("[DEBUG] X-Admin-Password received: %q, expected: %q\n", password, h.cfg.Admin.Password)
 	if password != h.cfg.Admin.Password {
 		h.writeError(w, http.StatusUnauthorized, "UNAUTHORIZED", "Invalid admin password")
 		return
