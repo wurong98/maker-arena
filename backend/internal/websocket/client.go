@@ -64,6 +64,13 @@ func (c *BinanceClient) Start() {
 
 // Stop disconnects from Binance WebSocket
 func (c *BinanceClient) Stop() {
+	// Close WebSocket connection first to unblock ReadMessage
+	c.mu.Lock()
+	if c.conn != nil {
+		c.conn.Close()
+	}
+	c.mu.Unlock()
+
 	close(c.stopChan)
 	c.wg.Wait()
 	log.Println("Binance WebSocket client stopped")
