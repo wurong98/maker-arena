@@ -210,7 +210,7 @@ const App = {
 
         // 更新顶部策略信息
         document.getElementById('selectedStrategyName').textContent = strategy.name || '未命名策略';
-        document.getElementById('strategyBalance').textContent = `${Components.formatNumber(strategy.balance)} USDT`;
+        document.getElementById('strategyBalance').textContent = `${Components.formatNumber(strategy.balance)} USDC`;
 
         const returnText = Components.formatPercent(strategy.returnRate);
         const returnEl = document.getElementById('strategyReturn');

@@ -67,7 +67,7 @@ const Components = {
                 <div class="strategy-rank ${rankClass}">#${rank}</div>
                 <div class="strategy-info">
                     <div class="strategy-name">${strategy.name || '未命名策略'}</div>
-                    <div class="strategy-balance">余额: ${this.formatNumber(strategy.balance)} USDT</div>
+                    <div class="strategy-balance">余额: ${this.formatNumber(strategy.balance)} USDC</div>
                 </div>
                 <div class="strategy-return ${returnClass}">${returnText}</div>
             </div>

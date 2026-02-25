@@ -160,7 +160,7 @@ const StrategyApp = {
                     <div class="strategy-info">
                         <div class="strategy-name">${strategy.name || '未命名策略'}</div>
                         <div class="strategy-balance">
-                            余额: ${Components.formatNumber(strategy.balance)} USDT
+                            余额: ${Components.formatNumber(strategy.balance)} USDC
                             <span class="strategy-return ${returnClass}" style="margin-left: 10px;">${returnText}</span>
                         </div>
                     </div>
@@ -205,11 +205,11 @@ const StrategyApp = {
 
         // 初始资金
         document.getElementById('detailInitialBalance').textContent =
-            `${Components.formatNumber(strategy.initialBalance || strategy.initial_balance)} USDT`;
+            `${Components.formatNumber(strategy.initialBalance || strategy.initial_balance)} USDC`;
 
         // 当前余额
         document.getElementById('detailBalance').textContent =
-            `${Components.formatNumber(strategy.balance)} USDT`;
+            `${Components.formatNumber(strategy.balance)} USDC`;
 
         // 收益率
         const returnEl = document.getElementById('detailReturn');
