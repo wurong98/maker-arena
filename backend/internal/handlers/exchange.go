@@ -193,6 +193,28 @@ func (h *ExchangeHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 			h.writeError(w, http.StatusBadRequest, "INVALID_PRICE", "Invalid price")
 			return
 		}
+
+		// 检查挂单是否会导致立即成交
+		ticker := h.matchingEngine.GetTicker(req.Symbol)
+		if ticker == nil {
+			h.writeError(w, http.StatusBadRequest, "NO_MARKET_DATA", "No market data available for this symbol")
+			return
+		}
+
+		// 检查是否会立即成交
+		if req.Side == "buy" {
+			// 买单：价格上穿时成交（当前价格 > 挂单价 且 上一笔价格 <= 挂单价）
+			if ticker.Price.GreaterThan(price) && ticker.PreviousPrice.LessThanOrEqual(price) {
+				h.writeError(w, http.StatusBadRequest, "ORDER_WOULD_IMMEDIATELY_FILL", "Buy order would immediately fill")
+				return
+			}
+		} else if req.Side == "sell" {
+			// 卖单：价格下穿时成交（当前价格 < 挂单价 且 上一笔价格 >= 挂单价）
+			if ticker.Price.LessThan(price) && ticker.PreviousPrice.GreaterThanOrEqual(price) {
+				h.writeError(w, http.StatusBadRequest, "ORDER_WOULD_IMMEDIATELY_FILL", "Sell order would immediately fill")
+				return
+			}
+		}
 	} else {
 		// Market order - get current price from ticker
 		ticker := h.matchingEngine.GetTicker(req.Symbol)
