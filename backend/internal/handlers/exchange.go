@@ -100,9 +100,11 @@ type GetPositionResponse struct {
 // GetBalanceResponse represents the response for getting balance
 type GetBalanceResponse struct {
 	Balance         string `json:"balance"`
+	FrozenMargin    string `json:"frozenMargin"`
 	UnrealizedPnl   string `json:"unrealizedPnl"`
 	TotalEquity     string `json:"totalEquity"`
 	UsedMargin      string `json:"usedMargin"`
+	TotalMargin     string `json:"totalMargin"`
 	AvailableMargin string `json:"availableMargin"`
 }
 
@@ -237,7 +239,8 @@ func (h *ExchangeHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 
 	// Calculate required margin
 	marginRequired := price.Mul(quantity).Div(decimal.NewFromInt(100)) // 100x leverage = 1% margin
-	if marginRequired.GreaterThan(strategy.Balance) {
+	availableBalance := strategy.Balance.Sub(strategy.FrozenMargin)
+	if marginRequired.GreaterThan(availableBalance) {
 		h.writeError(w, http.StatusBadRequest, "INSUFFICIENT_BALANCE", "Insufficient balance")
 		return
 	}
@@ -259,6 +262,11 @@ func (h *ExchangeHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	if err := h.db.Create(&order).Error; err != nil {
 		h.writeError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "Failed to create order")
 		return
+	}
+
+	// Freeze margin for limit orders (not for IOC/FOK/market which will be processed immediately)
+	if orderType == "limit" && timeInForce == "GTC" {
+		h.db.Model(&models.Strategy{}).Where("id = ?", strategy.ID).UpdateColumn("frozen_margin", gorm.Expr("frozen_margin + ?", marginRequired))
 	}
 
 	// Add to matching engine
@@ -351,6 +359,10 @@ func (h *ExchangeHandler) CancelOrder(w http.ResponseWriter, r *http.Request) {
 		h.writeError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "Failed to cancel order")
 		return
 	}
+
+	// Unfreeze margin
+	marginRequired := order.Price.Mul(order.Quantity).Div(decimal.NewFromInt(100))
+	h.db.Model(&models.Strategy{}).Where("id = ?", order.StrategyID).UpdateColumn("frozen_margin", gorm.Expr("frozen_margin - ?", marginRequired))
 
 	// Cancel order in matching engine
 	h.matchingEngine.CancelOrder(order.ID)
@@ -534,17 +546,22 @@ func (h *ExchangeHandler) GetBalance(w http.ResponseWriter, r *http.Request) {
 	// Calculate total equity
 	totalEquity := strategy.Balance.Add(unrealizedPnl)
 
-	// Calculate used margin
+	// Calculate used margin (position margin)
 	usedMargin := h.positionManager.CalculateUsedMargin(strategyID)
 
+	// Total margin = position margin + frozen margin (open orders)
+	totalMargin := usedMargin.Add(strategy.FrozenMargin)
+
 	// Calculate available margin
-	availableMargin := strategy.Balance.Sub(usedMargin)
+	availableMargin := strategy.Balance.Sub(totalMargin)
 
 	response := GetBalanceResponse{
 		Balance:         strategy.Balance.String(),
+		FrozenMargin:    strategy.FrozenMargin.String(),
 		UnrealizedPnl:   unrealizedPnl.String(),
 		TotalEquity:     totalEquity.String(),
 		UsedMargin:      usedMargin.String(),
+		TotalMargin:     totalMargin.String(),
 		AvailableMargin: availableMargin.String(),
 	}
 

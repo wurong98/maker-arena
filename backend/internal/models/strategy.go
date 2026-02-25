@@ -12,8 +12,9 @@ type Strategy struct {
 	APIKey      string          `gorm:"uniqueIndex;type:varchar(64);not null" json:"apiKey"`
 	Name        string          `gorm:"type:varchar(128);not null" json:"name"`
 	Description string          `gorm:"type:text" json:"description"`
-	Enabled     bool            `gorm:"default:true" json:"enabled"`
-	Balance     decimal.Decimal `gorm:"type:numeric(20,8);default:5000" json:"balance"`
+	Enabled       bool            `gorm:"default:true" json:"enabled"`
+	Balance       decimal.Decimal `gorm:"type:numeric(20,8);default:5000" json:"balance"`      // 账户余额
+	FrozenMargin decimal.Decimal `gorm:"type:numeric(20,8);default:0" json:"frozenMargin"` // 冻结保证金（挂单冻结）
 	CreatedAt   time.Time       `json:"createdAt"`
 	UpdatedAt   time.Time       `json:"updatedAt"`
 }

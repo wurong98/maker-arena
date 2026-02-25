@@ -307,6 +307,9 @@ func (me *MatchingEngine) HandleTrade(symbol string, price decimal.Decimal, quan
 					"status":    "canceled",
 					"updated_at": now,
 				})
+				// Unfreeze margin for TTL expired orders
+				marginRequired := order.Price.Mul(order.Quantity).Div(decimal.NewFromInt(100))
+				me.db.Model(&models.Strategy{}).Where("id = ?", order.StrategyID).UpdateColumn("frozen_margin", gorm.Expr("frozen_margin - ?", marginRequired))
 			}
 		}
 	}
@@ -319,6 +322,9 @@ func (me *MatchingEngine) HandleTrade(symbol string, price decimal.Decimal, quan
 					"status":    "canceled",
 					"updated_at": now,
 				})
+				// Unfreeze margin for TTL expired orders
+				marginRequired := order.Price.Mul(order.Quantity).Div(decimal.NewFromInt(100))
+				me.db.Model(&models.Strategy{}).Where("id = ?", order.StrategyID).UpdateColumn("frozen_margin", gorm.Expr("frozen_margin - ?", marginRequired))
 			}
 		}
 	}
@@ -484,6 +490,10 @@ func (me *MatchingEngine) executeFill(order *Order, fillQty decimal.Decimal, pri
 
 	// Deduct fee from balance
 	tx.Model(&models.Strategy{}).Where("id = ?", order.StrategyID).UpdateColumn("balance", gorm.Expr("balance - ?", fee))
+
+	// Unfreeze margin (full amount since system only supports all-or-nothing fills)
+	marginRequired := order.Price.Mul(order.Quantity).Div(decimal.NewFromInt(100))
+	tx.Model(&models.Strategy{}).Where("id = ?", order.StrategyID).UpdateColumn("frozen_margin", gorm.Expr("frozen_margin - ?", marginRequired))
 
 	tx.Commit()
 }
