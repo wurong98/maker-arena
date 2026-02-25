@@ -129,6 +129,14 @@ func (pm *PositionManager) positionKey(strategyID, symbol string) string {
 
 // UpdatePosition updates a position after a fill
 func (pm *PositionManager) UpdatePosition(strategyID, symbol, side string, quantity decimal.Decimal, price decimal.Decimal, fee decimal.Decimal) {
+	// Get current ticker BEFORE acquiring lock to avoid deadlock
+	var currentPrice decimal.Decimal
+	if tg := pm.tickerGetter; tg != nil {
+		if ticker := tg(symbol); ticker != nil {
+			currentPrice = ticker.Price
+		}
+	}
+
 	pm.mu.Lock()
 	defer pm.mu.Unlock()
 
@@ -183,13 +191,8 @@ func (pm *PositionManager) UpdatePosition(strategyID, symbol, side string, quant
 		}
 	}
 
-	// Update current price from ticker
-	if tg := pm.tickerGetter; tg != nil {
-		ticker := tg(symbol)
-		if ticker != nil {
-			position.CurrentPrice = ticker.Price
-		}
-	}
+	// Update current price from ticker (use pre-fetched value)
+	position.CurrentPrice = currentPrice
 
 	// Calculate liquidation price
 	position.LiquidationPrice = pm.calculateLiquidationPrice(position)
